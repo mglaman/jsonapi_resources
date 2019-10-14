@@ -63,7 +63,12 @@ class AuthorContent extends JsonapiResourceBase {
       $resource_type = $this->resourceTypeRepository->get($node->getEntityTypeId(), $node->bundle());
       return ResourceObject::createFromEntity($resource_type, $node);
     }, $nodes));
-    return $this->inner->buildWrappedResponse($data, $request, $this->inner->getIncludes($request, $data));
+    $response = $this->inner->buildWrappedResponse($data, $request, $this->inner->getIncludes($request, $data));
+    // @note: this is one reason why the plugin invokes buildWrappedResponse and
+    // not within the controller. The plugin may need to add additional cache
+    // metadata to the response.
+    $response->addCacheableDependency($user);
+    return $response;
   }
 
   protected function getBaseRoute($uri_path, $method) {
