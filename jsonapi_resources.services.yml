@@ -1,0 +1,7 @@
+services:
+  plugin.manager.jsonapi_resource:
+    class: Drupal\jsonapi_resources\JsonapiResourceManager
+    parent: default_plugin_manager
+  jsonapi_resources.jsonapi_controller_shim:
+    parent: jsonapi.entity_resource
+    class: Drupal\jsonapi_resources\Controller\jsonapi\EntityResourceShim

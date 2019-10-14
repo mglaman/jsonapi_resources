@@ -1,0 +1,6 @@
+name: 'JSON:API Resources test module'
+type: module
+core: 8.x
+dependencies:
+  - drupal:node
+  - jsonapi_resources:jsonapi_resources
