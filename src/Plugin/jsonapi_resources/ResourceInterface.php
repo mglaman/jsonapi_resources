@@ -3,6 +3,8 @@
 namespace Drupal\jsonapi_resources\Plugin\jsonapi_resources;
 
 use Drupal\Component\Plugin\PluginInspectionInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Session\AccountInterface;
 
 interface ResourceInterface extends PluginInspectionInterface {
   /**
@@ -16,19 +18,17 @@ interface ResourceInterface extends PluginInspectionInterface {
    */
   public function routes();
 
-  /**
-   * Provides an array of permissions suitable for .permissions.yml files.
+    /**
+   * Checks access for the plugin.
    *
-   * A resource plugin can define a set of user permissions that are used on the
-   * routes for this resource or for other purposes.
+   * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
+   *   The route match.
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *   The current user account.
    *
-   * It is not required for a resource plugin to specify permissions: if they
-   * have their own access control mechanism, they can use that, and return the
-   * empty array.
-   *
-   * @return array
-   *   The permission array.
+   * @return \Drupal\Core\Access\AccessResult
+   *   The access result.
    */
-  public function permissions();
+  public function access(RouteMatchInterface $route_match, AccountInterface $account);
 
 }
