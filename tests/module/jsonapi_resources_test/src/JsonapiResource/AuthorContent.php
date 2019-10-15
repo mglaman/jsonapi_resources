@@ -7,6 +7,7 @@ use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\jsonapi\JsonApiResource\ResourceObject;
 use Drupal\jsonapi\JsonApiResource\ResourceObjectData;
 use Drupal\jsonapi\ResourceType\ResourceTypeRepositoryInterface;
+use Drupal\jsonapi_resources\CacheableJsonapiResponse;
 use Drupal\jsonapi_resources\Controller\jsonapi\EntityResourceShim;
 use Drupal\jsonapi_resources\Plugin\jsonapi_resources\ResourceBase;
 use Drupal\jsonapi_resources\Plugin\jsonapi_resources\ResourceWithPermissionsInterface;
@@ -57,7 +58,7 @@ class AuthorContent extends ResourceBase implements ResourceWithPermissionsInter
     return 'jsonapi_resources get author_content';
   }
 
-  public function process(RouteMatchInterface $route_match, Request $request): ResourceObjectData {
+  public function process(RouteMatchInterface $route_match, Request $request): CacheableJsonapiResponse {
     // Force the author to be included.
     $include = $request->query->get('include');
     $request->query->set('include', $include . (empty($include) ? '' : ',') . 'uid');
@@ -75,7 +76,11 @@ class AuthorContent extends ResourceBase implements ResourceWithPermissionsInter
       $resource_type = $this->resourceTypeRepository->get($node->getEntityTypeId(), $node->bundle());
       return ResourceObject::createFromEntity($resource_type, $node);
     }, $nodes));
-    return $data;
+
+    // basically buildWrapped response, performs getIncludes
+    $response = CacheableJsonapiResponse::createFromData($data);
+    $response->addCacheableDependency($user);
+    return $response;
   }
 
 }

@@ -1,7 +1,12 @@
 services:
-  plugin.manager.jsonapi_resource:
-    class: Drupal\jsonapi_resources\JsonapiResourceManager
-    parent: default_plugin_manager
+  jsonapi_resource.controller:
+    class: Drupal\jsonapi_resources\Controller\ResourceController
+    arguments: ['']
   jsonapi_resources.jsonapi_controller_shim:
     parent: jsonapi.entity_resource
     class: Drupal\jsonapi_resources\Controller\jsonapi\EntityResourceShim
+
+  route_enhancer.jsonapi_resource:
+    class: Drupal\jsonapi_resources\Routing\Enhancer\JsonapiResourceEnhancer
+    tags:
+      - { name: route_enhancer }

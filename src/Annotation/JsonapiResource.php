@@ -6,6 +6,8 @@ use Drupal\Component\Annotation\Plugin;
 
 /**
  * @Annotation
+ *
+ * add feature flags for support of JSON API params (filter, sort, page)
  */
 class JsonapiResource extends Plugin {
 

@@ -1,2 +1,0 @@
-permission_callbacks:
-  - Drupal\jsonapi_resources\ResourcePermissions::permissions

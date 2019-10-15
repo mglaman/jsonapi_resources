@@ -61,7 +61,9 @@ class FeaturedNodes extends ResourceBase implements ResourceWithPermissionsInter
       $resource_type = $this->resourceTypeRepository->get($node->getEntityTypeId(), $node->bundle());
       return ResourceObject::createFromEntity($resource_type, $node);
     }, $nodes), 4);
-    return $data;
+    // basically buildWrapped response, performs getIncludes
+    $response = CacheableJsonapiResponse::create($data);
+    return $response;
   }
 
 }

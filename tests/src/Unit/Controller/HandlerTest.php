@@ -22,7 +22,7 @@ use Drupal\jsonapi\JsonApiResource\ResourceObjectData;
 use Drupal\jsonapi\ResourceResponse;
 use Drupal\jsonapi\ResourceType\ResourceTypeRepositoryInterface;
 use Drupal\jsonapi\Serializer\Serializer;
-use Drupal\jsonapi_resources\Controller\Handler;
+use Drupal\jsonapi_resources\Controller\ResourceController;
 use Drupal\jsonapi_resources\Controller\jsonapi\EntityResourceShim;
 use Drupal\jsonapi_resources\JsonapiResourceManagerInterface;
 use Drupal\jsonapi_resources\Plugin\jsonapi_resources\ResourceBase;
@@ -37,7 +37,7 @@ class HandlerTest extends UnitTestCase {
   public function testPluginDoesNotExist() {
     $manager = $this->prophesize(JsonapiResourceManagerInterface::class);
     $manager->hasDefinition('test_resource')->willReturn(FALSE);
-    $controller = new Handler(
+    $controller = new ResourceController(
       $this->prophesize(ResourceTypeRepositoryInterface::class)->reveal(),
       new Serializer(),
       $manager->reveal(),
@@ -68,7 +68,7 @@ class HandlerTest extends UnitTestCase {
       }
     });
 
-    $controller = new Handler(
+    $controller = new ResourceController(
       $this->prophesize(ResourceTypeRepositoryInterface::class)->reveal(),
       new Serializer(),
       $manager->reveal(),
@@ -119,7 +119,7 @@ class HandlerTest extends UnitTestCase {
     $container->set('cache_contexts_manager', $cache_contexts_manager->reveal());
     \Drupal::setContainer($container);
 
-    $controller = new Handler(
+    $controller = new ResourceController(
       $this->prophesize(ResourceTypeRepositoryInterface::class)->reveal(),
       new Serializer(),
       $manager->reveal(),
