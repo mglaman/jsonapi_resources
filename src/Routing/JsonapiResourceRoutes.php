@@ -6,7 +6,7 @@ use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\jsonapi\ResourceType\ResourceTypeRepositoryInterface;
 use Drupal\jsonapi\Routing\Routes as JsonapiRoutes;
 use Drupal\jsonapi_resources\JsonapiResourceManagerInterface;
-use Drupal\jsonapi_resources\Plugin\jsonapi_resources\JsonapiResourceInterface;
+use Drupal\jsonapi_resources\Plugin\jsonapi_resources\ResourceInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Routing\RouteCollection;
 
@@ -73,7 +73,7 @@ class JsonapiResourceRoutes implements ContainerInjectionInterface {
     foreach ($plugins as $plugin_id => $plugin_definition) {
       $plugin_routes = new RouteCollection();
       $jsonapi_resource = $this->jsonapiResourceManager->createInstance($plugin_id);
-      assert($jsonapi_resource instanceof JsonapiResourceInterface);
+      assert($jsonapi_resource instanceof ResourceInterface);
       $plugin_routes->addCollection($jsonapi_resource->routes());
       $plugin_routes->addDefaults(['_jsonapi_resource' => $plugin_id]);
       $routes->addCollection($plugin_routes);

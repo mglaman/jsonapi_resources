@@ -25,7 +25,7 @@ use Drupal\jsonapi\Serializer\Serializer;
 use Drupal\jsonapi_resources\Controller\Handler;
 use Drupal\jsonapi_resources\Controller\jsonapi\EntityResourceShim;
 use Drupal\jsonapi_resources\JsonapiResourceManagerInterface;
-use Drupal\jsonapi_resources\Plugin\jsonapi_resources\JsonapiResourceBase;
+use Drupal\jsonapi_resources\Plugin\jsonapi_resources\ResourceBase;
 use Drupal\Tests\UnitTestCase;
 use Prophecy\Argument;
 use Symfony\Component\HttpFoundation\Request;
@@ -62,7 +62,7 @@ class HandlerTest extends UnitTestCase {
       'id' => 'test_resource',
       'label' => 'Test Resource',
       'uri_path' => '/test-resource',
-    ], $resource_type_repository->reveal(), $entity_resource_shim) extends JsonapiResourceBase {
+    ], $resource_type_repository->reveal(), $entity_resource_shim) extends ResourceBase {
       public function get() {
         return new ResourceResponse(NULL);
       }
@@ -100,7 +100,7 @@ class HandlerTest extends UnitTestCase {
       'id' => 'test_resource',
       'label' => 'Test Resource',
       'uri_path' => '/test-resource',
-    ], $resource_type_repository->reveal(), $entity_resource_shim) extends JsonapiResourceBase {
+    ], $resource_type_repository->reveal(), $entity_resource_shim) extends ResourceBase {
       public function get() {
         return new ResourceResponse(NULL);
       }

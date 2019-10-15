@@ -20,7 +20,7 @@ class JsonapiResourceManager extends DefaultPluginManager implements JsonapiReso
    *   The module handler to invoke the alter hook with.
    */
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
-    parent::__construct('Plugin/jsonapi_resources', $namespaces, $module_handler, 'Drupal\jsonapi_resources\Plugin\jsonapi_resources\JsonapiResourceInterface', 'Drupal\jsonapi_resources\Annotation\JsonapiResource');
+    parent::__construct('Plugin/jsonapi_resources', $namespaces, $module_handler, 'Drupal\jsonapi_resources\Plugin\jsonapi_resources\ResourceInterface', 'Drupal\jsonapi_resources\Annotation\JsonapiResource');
     $this->setCacheBackend($cache_backend, 'jsonapi_resources');
     $this->alterInfo('jsonapi_resource');
   }

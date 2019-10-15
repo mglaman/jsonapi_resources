@@ -11,7 +11,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
 
-abstract class JsonapiResourceBase extends PluginBase implements ContainerFactoryPluginInterface, JsonapiResourceInterface {
+abstract class ResourceBase extends PluginBase implements ContainerFactoryPluginInterface, ResourceInterface {
 
   /**
    * @var \Drupal\jsonapi\ResourceType\ResourceTypeRepositoryInterface

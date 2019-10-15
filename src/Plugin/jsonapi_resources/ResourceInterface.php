@@ -4,7 +4,7 @@ namespace Drupal\jsonapi_resources\Plugin\jsonapi_resources;
 
 use Drupal\Component\Plugin\PluginInspectionInterface;
 
-interface JsonapiResourceInterface extends PluginInspectionInterface {
+interface ResourceInterface extends PluginInspectionInterface {
   /**
    * Returns a collection of routes with URL path information for the resource.
    *

@@ -3,7 +3,7 @@
 namespace Drupal\jsonapi_resources;
 
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
-use Drupal\jsonapi_resources\Plugin\jsonapi_resources\JsonapiResourceInterface;
+use Drupal\jsonapi_resources\Plugin\jsonapi_resources\ResourceInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class JsonapiResourcePermissions implements ContainerInjectionInterface {
@@ -28,7 +28,7 @@ class JsonapiResourcePermissions implements ContainerInjectionInterface {
     $permissions = [];
     foreach ($plugins as $plugin_id => $plugin_definition) {
       $plugin = $this->jsonapiResourceManager->createInstance($plugin_id);
-      assert($plugin instanceof JsonapiResourceInterface);
+      assert($plugin instanceof ResourceInterface);
       $permissions[] = $plugin->permissions();
     }
     return array_merge([], ...$permissions);

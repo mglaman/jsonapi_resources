@@ -16,8 +16,8 @@ use Drupal\jsonapi\Serializer\Serializer;
 use Drupal\jsonapi_resources\Controller\jsonapi\EntityResourceShim;
 use Drupal\jsonapi_resources\JsonapiResourceManagerInterface;
 use Drupal\jsonapi_resources\JsonapiResourcePermissions;
-use Drupal\jsonapi_resources\Plugin\jsonapi_resources\JsonapiResourceBase;
-use Drupal\jsonapi_resources\Plugin\jsonapi_resources\JsonapiResourceInterface;
+use Drupal\jsonapi_resources\Plugin\jsonapi_resources\ResourceBase;
+use Drupal\jsonapi_resources\Plugin\jsonapi_resources\ResourceInterface;
 use Drupal\Tests\UnitTestCase;
 
 class PermissionsTest extends UnitTestCase {
@@ -25,7 +25,7 @@ class PermissionsTest extends UnitTestCase {
   /**
    * @dataProvider dataProviderJsonapiResources
    */
-  public function testPermissions(JsonapiResourceInterface $jsonapi_resource, array $expected_permissions) {
+  public function testPermissions(ResourceInterface $jsonapi_resource, array $expected_permissions) {
     $mock_manager = $this->prophesize(JsonapiResourceManagerInterface::class);
     $mock_manager->getDefinitions()->willReturn([$jsonapi_resource->getPluginId() => $jsonapi_resource->getPluginDefinition()]);
     $mock_manager->createInstance($jsonapi_resource->getPluginId())->willReturn($jsonapi_resource);
@@ -43,7 +43,7 @@ class PermissionsTest extends UnitTestCase {
         'id' => 'test_resource',
         'label' => 'Test Resource',
         'uri_path' => '/test-resource',
-      ], $resource_type_repository->reveal(), $entity_resource_shim) extends JsonapiResourceBase {
+      ], $resource_type_repository->reveal(), $entity_resource_shim) extends ResourceBase {
         public function get() {
         }
       },
@@ -56,7 +56,7 @@ class PermissionsTest extends UnitTestCase {
         'id' => 'test_resource',
         'label' => 'Test Resource',
         'uri_path' => '/test-resource',
-      ], $resource_type_repository->reveal(), $entity_resource_shim) extends JsonapiResourceBase {
+      ], $resource_type_repository->reveal(), $entity_resource_shim) extends ResourceBase {
         public function get() {
         }
         public function post() {
