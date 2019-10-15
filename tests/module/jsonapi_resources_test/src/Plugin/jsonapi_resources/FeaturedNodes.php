@@ -3,11 +3,13 @@
 namespace Drupal\jsonapi_resources_test\Plugin\jsonapi_resources;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\jsonapi\JsonApiResource\ResourceObject;
 use Drupal\jsonapi\JsonApiResource\ResourceObjectData;
 use Drupal\jsonapi\ResourceType\ResourceTypeRepositoryInterface;
 use Drupal\jsonapi_resources\Controller\jsonapi\EntityResourceShim;
-use Drupal\jsonapi_resources\Plugin\jsonapi_resources\JsonapiResourceBase;
+use Drupal\jsonapi_resources\Plugin\jsonapi_resources\ResourceBase;
+use Drupal\jsonapi_resources\Plugin\jsonapi_resources\ResourceWithPermissionsInterface;
 use Drupal\node\NodeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -20,7 +22,7 @@ use Symfony\Component\HttpFoundation\Request;
  *   uri_path = "/featured-nodes",
  * )
  */
-class FeaturedNodes extends JsonapiResourceBase {
+class FeaturedNodes extends ResourceBase implements ResourceWithPermissionsInterface {
 
   /**
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
@@ -43,7 +45,11 @@ class FeaturedNodes extends JsonapiResourceBase {
     $this->entityTypeManager = $entity_type_manager;
   }
 
-  public function get(Request $request) {
+  public function permission() {
+    return 'jsonapi_resources get featured_nodes';
+  }
+
+  public function process(RouteMatchInterface $route_match, Request $request): ResourceObjectData {
     $node_storage = $this->entityTypeManager->getStorage('node');
     $featured_query = $node_storage->getQuery();
     $featured_query
@@ -55,7 +61,7 @@ class FeaturedNodes extends JsonapiResourceBase {
       $resource_type = $this->resourceTypeRepository->get($node->getEntityTypeId(), $node->bundle());
       return ResourceObject::createFromEntity($resource_type, $node);
     }, $nodes), 4);
-    return $this->inner->buildWrappedResponse($data, $request, $this->inner->getIncludes($request, $data));
+    return $data;
   }
 
 }

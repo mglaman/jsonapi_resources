@@ -3,14 +3,15 @@
 namespace Drupal\jsonapi_resources\Routing;
 
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
-use Drupal\jsonapi\ResourceType\ResourceTypeRepositoryInterface;
 use Drupal\jsonapi\Routing\Routes as JsonapiRoutes;
 use Drupal\jsonapi_resources\JsonapiResourceManagerInterface;
 use Drupal\jsonapi_resources\Plugin\jsonapi_resources\ResourceInterface;
+use Drupal\jsonapi_resources\Plugin\jsonapi_resources\ResourceWithPermissionsInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
 
-class JsonapiResourceRoutes implements ContainerInjectionInterface {
+class ResourceRoutes implements ContainerInjectionInterface {
 
   /**
    * List of providers.
@@ -71,12 +72,36 @@ class JsonapiResourceRoutes implements ContainerInjectionInterface {
 
     $plugins = $this->jsonapiResourceManager->getDefinitions();
     foreach ($plugins as $plugin_id => $plugin_definition) {
-      $plugin_routes = new RouteCollection();
       $jsonapi_resource = $this->jsonapiResourceManager->createInstance($plugin_id);
       assert($jsonapi_resource instanceof ResourceInterface);
-      $plugin_routes->addCollection($jsonapi_resource->routes());
-      $plugin_routes->addDefaults(['_jsonapi_resource' => $plugin_id]);
-      $routes->addCollection($plugin_routes);
+      $requirements = [
+        '_custom_access' => 'Drupal\jsonapi_resources\Controller\Handler::access',
+      ];
+      if ($jsonapi_resource instanceof ResourceWithPermissionsInterface) {
+        $requirements['_permission'] = $jsonapi_resource->permission();
+      }
+
+      // @todo this feels too magical.
+      $options = [];
+      if (!empty($plugin_definition['route_parameters'])) {
+        foreach ($plugin_definition['route_parameters'] as $parameter_name => $parameter_type) {
+          $options[$parameter_name]['type'] = $parameter_type;
+        }
+      }
+
+      $route = new Route($plugin_definition['uri_path'],
+        [
+          '_controller' => 'Drupal\jsonapi_resources\Controller\Handler::handle',
+          '_jsonapi_resource' => $plugin_id,
+        ],
+        $requirements,
+        $options,
+        '',
+        [],
+        [$plugin_definition['method']]
+      );
+      $route_name_base = str_replace(':', '.', $plugin_id);
+      $routes->add('jsonapi_resource.' . $route_name_base, $route);
     }
 
     // Ensure JSON API prefix.

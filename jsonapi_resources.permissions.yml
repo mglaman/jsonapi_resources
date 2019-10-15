@@ -1,2 +1,2 @@
 permission_callbacks:
-  - Drupal\rest\RestPermissions::permissions
+  - Drupal\jsonapi_resources\ResourcePermissions::permissions

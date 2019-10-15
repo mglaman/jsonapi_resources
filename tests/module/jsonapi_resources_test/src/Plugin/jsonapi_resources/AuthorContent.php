@@ -8,7 +8,8 @@ use Drupal\jsonapi\JsonApiResource\ResourceObject;
 use Drupal\jsonapi\JsonApiResource\ResourceObjectData;
 use Drupal\jsonapi\ResourceType\ResourceTypeRepositoryInterface;
 use Drupal\jsonapi_resources\Controller\jsonapi\EntityResourceShim;
-use Drupal\jsonapi_resources\Plugin\jsonapi_resources\JsonapiResourceBase;
+use Drupal\jsonapi_resources\Plugin\jsonapi_resources\ResourceBase;
+use Drupal\jsonapi_resources\Plugin\jsonapi_resources\ResourceWithPermissionsInterface;
 use Drupal\node\NodeInterface;
 use Drupal\user\UserInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -20,9 +21,13 @@ use Symfony\Component\HttpFoundation\Request;
  *   label = "Author content",
  *   definition = "Returns content created by a user",
  *   uri_path = "/{user}/content",
+ *   method="GET",
+ *   route_parameters={
+ *     "user" = "entity:user",
+ *   }
  * )
  */
-class AuthorContent extends JsonapiResourceBase {
+class AuthorContent extends ResourceBase implements ResourceWithPermissionsInterface {
 
   /**
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
@@ -45,7 +50,14 @@ class AuthorContent extends JsonapiResourceBase {
     $this->entityTypeManager = $entity_type_manager;
   }
 
-  public function get(Request $request, RouteMatchInterface $route_match) {
+  /**
+   * {@inheritdoc}
+   */
+  public function permission() {
+    return 'jsonapi_resources get author_content';
+  }
+
+  public function process(RouteMatchInterface $route_match, Request $request): ResourceObjectData {
     // Force the author to be included.
     $include = $request->query->get('include');
     $request->query->set('include', $include . (empty($include) ? '' : ',') . 'uid');
@@ -63,21 +75,7 @@ class AuthorContent extends JsonapiResourceBase {
       $resource_type = $this->resourceTypeRepository->get($node->getEntityTypeId(), $node->bundle());
       return ResourceObject::createFromEntity($resource_type, $node);
     }, $nodes));
-    $response = $this->inner->buildWrappedResponse($data, $request, $this->inner->getIncludes($request, $data));
-    // @note: this is one reason why the plugin invokes buildWrappedResponse and
-    // not within the controller. The plugin may need to add additional cache
-    // metadata to the response.
-    $response->addCacheableDependency($user);
-    return $response;
-  }
-
-  protected function getBaseRoute($uri_path, $method) {
-    $route = parent::getBaseRoute($uri_path, $method);
-    $parameters = $route->getOption('parameters') ?: [];
-    $parameters['user']['type'] = 'entity:user';
-    $route->setOption('parameters', $parameters);
-
-    return $route;
+    return $data;
   }
 
 }

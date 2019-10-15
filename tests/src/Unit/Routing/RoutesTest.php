@@ -18,7 +18,8 @@ use Drupal\jsonapi_resources\Controller\jsonapi\EntityResourceShim;
 use Drupal\jsonapi_resources\JsonapiResourceManagerInterface;
 use Drupal\jsonapi_resources\Plugin\jsonapi_resources\ResourceBase;
 use Drupal\jsonapi_resources\Plugin\jsonapi_resources\ResourceInterface;
-use Drupal\jsonapi_resources\Routing\JsonapiResourceRoutes;
+use Drupal\jsonapi_resources\Plugin\jsonapi_resources\ResourceWithPermissionsInterface;
+use Drupal\jsonapi_resources\Routing\ResourceRoutes;
 use Drupal\Tests\UnitTestCase;
 
 class RoutesTest extends UnitTestCase {
@@ -30,7 +31,7 @@ class RoutesTest extends UnitTestCase {
     $mock_manager = $this->prophesize(JsonapiResourceManagerInterface::class);
     $mock_manager->getDefinitions()->willReturn([$jsonapi_resource->getPluginId() => $jsonapi_resource->getPluginDefinition()]);
     $mock_manager->createInstance($jsonapi_resource->getPluginId())->willReturn($jsonapi_resource);
-    $route_provider = new JsonapiResourceRoutes(
+    $route_provider = new ResourceRoutes(
       $mock_manager->reveal(),
       ['cookie' => 'cookie'],
       '/jsonapi'
@@ -51,9 +52,9 @@ class RoutesTest extends UnitTestCase {
       $this->assertTrue($route->getDefault(JsonapiRoutes::JSON_API_ROUTE_FLAG_KEY));
       $this->assertEquals('api_json', $route->getRequirement('_format'));
 
-      list($namespace, $plugin_id, $method) = explode('.', $expected_route_name);
-      $lowered_method = strtolower($method);
-      $this->assertEquals("jsonapi_resources $lowered_method {$jsonapi_resource->getPluginId()}", $route->getRequirement('_permission'));
+      if ($jsonapi_resource instanceof ResourceWithPermissionsInterface) {
+        $this->assertEquals($jsonapi_resource->permission(), $route->getRequirement('_permission'));
+      }
     }
   }
 
@@ -65,13 +66,16 @@ class RoutesTest extends UnitTestCase {
         'id' => 'test_resource',
         'label' => 'Test Resource',
         'uri_path' => '/test-resource',
-      ], $resource_type_repository->reveal(), $entity_resource_shim) extends ResourceBase {
+      ], $resource_type_repository->reveal(), $entity_resource_shim) extends ResourceBase implements ResourceWithPermissionsInterface {
         public function get() {
+        }
+        public function permission() {
+          return 'access test_resource';
         }
       },
       [
         'jsonapi_resources.test_resource.GET' => [],
-      ]
+      ],
     ];
     yield [
       new class([], 'test_resource', [

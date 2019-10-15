@@ -3,10 +3,12 @@
 namespace Drupal\jsonapi_resources;
 
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\jsonapi_resources\Plugin\jsonapi_resources\ResourceInterface;
+use Drupal\jsonapi_resources\Plugin\jsonapi_resources\ResourceWithPermissionsInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
-class JsonapiResourcePermissions implements ContainerInjectionInterface {
+class ResourcePermissions implements ContainerInjectionInterface {
 
   /**
    * @var \Drupal\jsonapi_resources\JsonapiResourceManagerInterface
@@ -28,9 +30,12 @@ class JsonapiResourcePermissions implements ContainerInjectionInterface {
     $permissions = [];
     foreach ($plugins as $plugin_id => $plugin_definition) {
       $plugin = $this->jsonapiResourceManager->createInstance($plugin_id);
-      assert($plugin instanceof ResourceInterface);
-      $permissions[] = $plugin->permissions();
+      if ($plugin instanceof ResourceWithPermissionsInterface) {
+        $permissions[$plugin->permission()] = [
+          'title' => new TranslatableMarkup('Access %label resource', ['%label' => $plugin_definition['label']]),
+        ];
+      }
     }
-    return array_merge([], ...$permissions);
+    return $permissions;
   }
 }

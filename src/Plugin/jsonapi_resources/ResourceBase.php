@@ -2,14 +2,15 @@
 
 namespace Drupal\jsonapi_resources\Plugin\jsonapi_resources;
 
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginBase;
-use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\jsonapi\ResourceType\ResourceTypeRepositoryInterface;
 use Drupal\jsonapi_resources\Controller\jsonapi\EntityResourceShim;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\Routing\Route;
-use Symfony\Component\Routing\RouteCollection;
 
 abstract class ResourceBase extends PluginBase implements ContainerFactoryPluginInterface, ResourceInterface {
 
@@ -25,24 +26,13 @@ abstract class ResourceBase extends PluginBase implements ContainerFactoryPlugin
    */
   protected $inner;
 
-  public function __construct(
-    array $configuration,
-    $plugin_id,
-    $plugin_definition,
-    ResourceTypeRepositoryInterface $resource_type_repository,
-    EntityResourceShim $jsonapi_controller
-  ) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, ResourceTypeRepositoryInterface $resource_type_repository, EntityResourceShim $jsonapi_controller) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->resourceTypeRepository = $resource_type_repository;
     $this->inner = $jsonapi_controller;
   }
 
-  public static function create(
-    ContainerInterface $container,
-    array $configuration,
-    $plugin_id,
-    $plugin_definition
-  ) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     return new static(
       $configuration,
       $plugin_id,
@@ -52,60 +42,35 @@ abstract class ResourceBase extends PluginBase implements ContainerFactoryPlugin
     );
   }
 
-  protected function availableMethods() {
-    return array_filter(['GET', 'POST', 'PATCH', 'DELETE'], static function ($method) {
-      return (method_exists(static::class, strtolower($method)));
-    });
-  }
-
-  public function permissions() {
-    $permissions = [];
-    $definition = $this->getPluginDefinition();
-    foreach ($this->availableMethods() as $method) {
-      $lowered_method = strtolower($method);
-      $permissions["jsonapi_resources $lowered_method $this->pluginId"] = [
-        'title' => new TranslatableMarkup('Access @method on %label resource', ['@method' => $method, '%label' => $definition['label']]),
-      ];
+  /**
+   * {@inheritdoc}
+   */
+  public function access(RouteMatchInterface $route_match, AccountInterface $account): AccessResult {
+    if ($this instanceof ResourceWithPermissionsInterface) {
+      return AccessResult::allowedIfHasPermission($account, $this->permission());
     }
-    return $permissions;
+    return AccessResult::forbidden();
   }
 
-  public function routes() {
-    $collection = new RouteCollection();
-    $plugin_definition = $this->getPluginDefinition();
-
-    $route_name_base = str_replace(':', '.', $this->pluginId);
-    foreach ($this->availableMethods() as $method) {
-      $route = $this->getBaseRoute($plugin_definition['uri_path'], $method);
-      $collection->add("jsonapi_resources.$route_name_base.$method", $route);
-    }
-
-    return $collection;
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheContexts(): array {
+    return [];
   }
 
-  protected function getBaseRoute($uri_path, $method) {
-    return new Route($uri_path, [
-      '_controller' => 'Drupal\jsonapi_resources\Controller\Handler::handle',
-    ],
-      $this->getBaseRouteRequirements($method),
-      [],
-      '',
-      [],
-      [$method]
-    );
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheTags(): array {
+    return [];
   }
 
-  protected function getBaseRouteRequirements($method) {
-    $requirements = [
-      '_access' => 'TRUE',
-    ];
-    $permissions = $this->permissions();
-    $lowered_method = strtolower($method);
-    if (isset($permissions["jsonapi_resources $lowered_method $this->pluginId"])) {
-      $requirements['_permission'] = "jsonapi_resources $lowered_method $this->pluginId";
-    }
-
-    return $requirements;
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheMaxAge(): int {
+    return Cache::PERMANENT;
   }
 
 }

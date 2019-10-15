@@ -32,4 +32,22 @@ class JsonapiResource extends Plugin {
    */
   public $uri_path;
 
+  /**
+   * The HTTP method for the JSON:API resource.
+   *
+   * @var string
+   *
+   * @todo validate one of ['GET', 'POST', 'PATCH', 'DELETE']
+   */
+  public $method;
+
+  /**
+   * Route parameter definitions.
+   *
+   * @var array
+   *
+   * @todo this feels too fragile.
+   */
+  public $route_parameters = [];
+
 }

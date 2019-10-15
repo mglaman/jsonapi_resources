@@ -3,22 +3,34 @@
 namespace Drupal\jsonapi_resources\Plugin\jsonapi_resources;
 
 use Drupal\Component\Plugin\PluginInspectionInterface;
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Cache\CacheableDependencyInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\jsonapi\JsonApiResource\ResourceObjectData;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Routing\RouteCollection;
 
-interface ResourceInterface extends PluginInspectionInterface {
+/**
+ * Interface for JSON:API Resource plugins.
+ *
+ * This plugin implements CacheableDependencyInterface so that plugins may
+ * define additional cache contexts and tags that should be appended to any
+ * cacheable response beyond the cache metadata in the contained JSON:API
+ * response data.
+ */
+interface ResourceInterface extends PluginInspectionInterface, CacheableDependencyInterface {
+
   /**
-   * Returns a collection of routes with URL path information for the resource.
    *
-   * This method determines where a resource is reachable, what path
-   * replacements are used, the required HTTP method for the operation etc.
+   * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
+   * @param \Symfony\Component\HttpFoundation\Request $request
    *
-   * @return \Symfony\Component\Routing\RouteCollection
-   *   A collection of routes that should be registered for this resource.
+   * @return \Drupal\jsonapi\JsonApiResource\ResourceObjectData
    */
-  public function routes();
+  public function process(RouteMatchInterface $route_match, Request $request): ResourceObjectData;
 
-    /**
+  /**
    * Checks access for the plugin.
    *
    * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
@@ -29,6 +41,6 @@ interface ResourceInterface extends PluginInspectionInterface {
    * @return \Drupal\Core\Access\AccessResult
    *   The access result.
    */
-  public function access(RouteMatchInterface $route_match, AccountInterface $account);
+  public function access(RouteMatchInterface $route_match, AccountInterface $account): AccessResult;
 
 }
