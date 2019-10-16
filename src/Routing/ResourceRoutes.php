@@ -2,16 +2,12 @@
 
 namespace Drupal\jsonapi_resources\Routing;
 
-use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+use Drupal\Core\Routing\RouteBuildEvent;
+use Drupal\Core\Routing\RoutingEvents;
 use Drupal\jsonapi\Routing\Routes as JsonapiRoutes;
-use Drupal\jsonapi_resources\JsonapiResourceManagerInterface;
-use Drupal\jsonapi_resources\Plugin\jsonapi_resources\ResourceInterface;
-use Drupal\jsonapi_resources\Plugin\jsonapi_resources\ResourceWithPermissionsInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\Routing\Route;
-use Symfony\Component\Routing\RouteCollection;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
-class ResourceRoutes implements ContainerInjectionInterface {
+final class ResourceRoutes implements EventSubscriberInterface {
 
   /**
    * List of providers.
@@ -28,11 +24,6 @@ class ResourceRoutes implements ContainerInjectionInterface {
   protected $jsonApiBasePath;
 
   /**
-   * @var \Drupal\jsonapi_resources\JsonapiResourceManagerInterface
-   */
-  protected $jsonapiResourceManager;
-
-  /**
    * Instantiates a Routes object.
    *
    * @param string[] $authentication_providers
@@ -40,86 +31,44 @@ class ResourceRoutes implements ContainerInjectionInterface {
    * @param string $jsonapi_base_path
    *   The JSON:API base path.
    */
-  public function __construct(JsonapiResourceManagerInterface $jsonapi_resource_manager, array $authentication_providers, $jsonapi_base_path) {
-    $this->jsonapiResourceManager = $jsonapi_resource_manager;
+  public function __construct(array $authentication_providers, $jsonapi_base_path) {
     $this->providerIds = array_keys($authentication_providers);
-    assert(is_string($jsonapi_base_path));
-    assert(
-      strpos($jsonapi_base_path, '/') === 0,
-      sprintf('The provided base path should contain a leading slash "/". Given: "%s".', $jsonapi_base_path)
-    );
-    assert(
-      substr($jsonapi_base_path, -1) !== '/',
-      sprintf('The provided base path should not contain a trailing slash "/". Given: "%s".', $jsonapi_base_path)
-    );
     $this->jsonApiBasePath = $jsonapi_base_path;
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('plugin.manager.jsonapi_resource'),
-      $container->getParameter('authentication_providers'),
-      $container->getParameter('jsonapi.base_path')
-    );
+  public static function getSubscribedEvents() {
+    // Run before route_http_method_subscriber, so that we can ensure JSON:API
+    // Resource routes default to only GET methods if not set.
+    $events[RoutingEvents::ALTER][] = ['decorateJsonapiResourceRoutes', 6000];
+    return $events;
   }
 
-
-  public function routes() {
-    $routes = new RouteCollection();
-
-    $plugins = $this->jsonapiResourceManager->getDefinitions();
-    foreach ($plugins as $plugin_id => $plugin_definition) {
-      $jsonapi_resource = $this->jsonapiResourceManager->createInstance($plugin_id);
-      assert($jsonapi_resource instanceof ResourceInterface);
-      $requirements = [
-        '_custom_access' => 'Drupal\jsonapi_resources\Controller\Handler::access',
-      ];
-      if ($jsonapi_resource instanceof ResourceWithPermissionsInterface) {
-        $requirements['_permission'] = $jsonapi_resource->permission();
+  public function decorateJsonapiResourceRoutes(RouteBuildEvent $event) {
+    foreach ($event->getRouteCollection() as $route) {
+      if ($route->getDefault('_jsonapi_resource') === NULL) {
+        continue;
       }
+      $route->setPath('/' . $this->jsonApiBasePath . $route->getPath());
+      $route->addRequirements([
+        // Require the JSON:API media type header on every route.
+        '_content_type_format' => 'api_json',
+        // All routes serve only the JSON:API media type.
+        '_format' => 'api_json',
+      ]);
 
-      // @todo this feels too magical.
-      $options = [];
-      if (!empty($plugin_definition['route_parameters'])) {
-        foreach ($plugin_definition['route_parameters'] as $parameter_name => $parameter_type) {
-          $options[$parameter_name]['type'] = $parameter_type;
-        }
+      // Enable all available authentication providers.
+      $route->addOptions(['_auth' => $this->providerIds]);
+      // Flag every route as belonging to the JSON:API module.
+      $route->addDefaults([JsonapiRoutes::JSON_API_ROUTE_FLAG_KEY => TRUE]);
+
+      $methods = $route->getMethods();
+      if (empty($methods)) {
+        $route->setMethods(['GET']);
       }
-
-      $route = new Route($plugin_definition['uri_path'],
-        [
-          '_controller' => 'Drupal\jsonapi_resources\Controller\Handler::handle',
-          '_jsonapi_resource' => $plugin_id,
-        ],
-        $requirements,
-        $options,
-        '',
-        [],
-        [$plugin_definition['method']]
-      );
-      $route_name_base = str_replace(':', '.', $plugin_id);
-      $routes->add('jsonapi_resource.' . $route_name_base, $route);
     }
-
-    // Ensure JSON API prefix.
-    $routes->addPrefix($this->jsonApiBasePath);
-
-    // Require the JSON:API media type header on every route, except on file
-    // upload routes, where we require `application/octet-stream`.
-    $routes->addRequirements(['_content_type_format' => 'api_json']);
-
-    // Enable all available authentication providers.
-    $routes->addOptions(['_auth' => $this->providerIds]);
-
-    // Flag every route as belonging to the JSON:API module.
-    $routes->addDefaults([JsonapiRoutes::JSON_API_ROUTE_FLAG_KEY => TRUE]);
-
-    // All routes serve only the JSON:API media type.
-    $routes->addRequirements(['_format' => 'api_json']);
-
-    return $routes;
   }
+
 }

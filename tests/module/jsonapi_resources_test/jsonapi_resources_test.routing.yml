@@ -1,23 +1,25 @@
 jsonapi_resources_test.author_content:
   path: '/{user}/content'
   defaults:
-    # decorator adds all the required
-    # ensures controller matches interface?
-    # enhancer::applies() if `_jsonapi_resource` but class_implements != our interface, throw exception
-    _jsonapi_resource: Drupal\jsonapi_resources_test\Plugin\jsonapi_resources\AuthorContent
+    _jsonapi_resource: Drupal\jsonapi_resources_test\Resource\AuthorContent::process
     # handle POST/PATCH
 #    _jsonapi_resource_types:
 #      - dlkdlkd
   requirements:
     _permission: 'access content'
     _entity_access: 'user.view'
+  methods: [GET]
   options:
     parameters:
       user:
         type: entity:user
-
-
-# $this->dispatcher->dispatch(RoutingEvents::ALTER, new RouteBuildEvent($collection));
-# use ALTER event versus enhancer for performance as routes are enhanced at runtime, not cached on build.
-# like $defaults['_controller'] = 'controller.form:getContentResult';
-# invoke ::process
+jsonapi_resources_test.featured_content:
+  path: '/featured-content'
+  defaults:
+    _jsonapi_resource: Drupal\jsonapi_resources_test\Resource\FeaturedNodes::process
+    # handle POST/PATCH
+  #    _jsonapi_resource_types:
+  #      - dlkdlkd
+  requirements:
+    _permission: 'access content'
+  methods: [GET]

@@ -1,12 +1,14 @@
 services:
-  jsonapi_resource.controller:
-    class: Drupal\jsonapi_resources\Controller\ResourceController
-    arguments: ['']
-  jsonapi_resources.jsonapi_controller_shim:
-    parent: jsonapi.entity_resource
-    class: Drupal\jsonapi_resources\Controller\jsonapi\EntityResourceShim
+  jsonapi_resource.resource_response_factory:
+    class: Drupal\jsonapi_resources\ResourceResponseFactory
+    arguments: ['@jsonapi.include_resolver']
 
+  route_subscriber.jsonapi_resource:
+    class: Drupal\jsonapi_resources\Routing\ResourceRoutes
+    arguments: ['%authentication_providers%', '%jsonapi.base_path%']
+    tags:
+      - { name: event_subscriber }
   route_enhancer.jsonapi_resource:
-    class: Drupal\jsonapi_resources\Routing\Enhancer\JsonapiResourceEnhancer
+    class: Drupal\jsonapi_resources\Routing\Enhancer\ResourceEnhancer
     tags:
       - { name: route_enhancer }

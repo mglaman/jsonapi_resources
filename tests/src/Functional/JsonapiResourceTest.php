@@ -13,7 +13,6 @@ use Drupal\Tests\jsonapi\Functional\ResourceResponseTestTrait;
 use Drupal\user\Entity\Role;
 use Drupal\user\RoleInterface;
 use GuzzleHttp\RequestOptions;
-use Psr\Http\Message\ResponseInterface;
 
 class JsonapiResourceTest extends BrowserTestBase {
 
@@ -84,10 +83,10 @@ class JsonapiResourceTest extends BrowserTestBase {
     }
     $this->grantPermissionsToTestedRole([
       'access content',
-      'jsonapi_resources get featured_nodes'
+      'access user profiles',
     ]);
 
-    $url = Url::fromRoute('jsonapi_resources.featured_nodes.GET');
+    $url = Url::fromRoute('jsonapi_resources_test.featured_content');
     $request_options = [];
     $request_options[RequestOptions::HEADERS]['Accept'] = 'application/vnd.api+json';
     $request_options = NestedArray::mergeDeep($request_options, $this->getAuthenticationRequestOptions());
@@ -128,11 +127,10 @@ class JsonapiResourceTest extends BrowserTestBase {
 
     $this->grantPermissionsToTestedRole([
       'access content',
-      'jsonapi_resources get author_content'
     ]);
 
-    $url = Url::fromRoute('jsonapi_resources.author_content.GET', [
-      'user' => $author_user->id()
+    $url = Url::fromRoute('jsonapi_resources_test.author_content', [
+      'user' => $author_user->id(),
     ]);
     $request_options = [];
     $request_options[RequestOptions::HEADERS]['Accept'] = 'application/vnd.api+json';
