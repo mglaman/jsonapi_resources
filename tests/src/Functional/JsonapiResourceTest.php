@@ -4,6 +4,7 @@ namespace Drupal\Tests\jsonapi_resources\Functional;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\Access\CsrfRequestHeaderAccessCheck;
 use Drupal\Core\Url;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
@@ -26,6 +27,9 @@ class JsonapiResourceTest extends BrowserTestBase {
    */
   protected $account;
 
+  /**
+   * {@inheritdoc}
+   */
   protected static $modules = [
     'basic_auth',
     'node',
@@ -34,6 +38,9 @@ class JsonapiResourceTest extends BrowserTestBase {
     'jsonapi_resources_test',
   ];
 
+  /**
+   * {@inheritdoc}
+   */
   protected function setUp() {
     parent::setUp();
     // Ensure the anonymous user role has no permissions at all.
@@ -59,8 +66,10 @@ class JsonapiResourceTest extends BrowserTestBase {
     $this->container->get('current_user')->setAccount($this->account);
   }
 
-  // Tests a custom collection.
-  public function testFeaturedNodesPlugin() {
+  /**
+   * Tests the custom Featured Nodes resource.
+   */
+  public function testFeaturedNodesResource() {
     NodeType::create([
       'name' => 'article',
       'type' => 'article',
@@ -101,15 +110,17 @@ class JsonapiResourceTest extends BrowserTestBase {
     }, $response_document['data']));
   }
 
-  // Tests a custom collection with custom route parameter.
-  public function testAuthorContentPlugin() {
+  /**
+   * Tests the Author Content resource.
+   */
+  public function testAuthorContentResource() {
     NodeType::create([
       'name' => 'article',
       'type' => 'article',
     ])->save();
     $this->container->get('router.builder')->rebuild();
 
-    $author_user = $this->createUser();
+    $author_user = $this->account;
     $node1 = Node::create([
       'type' => 'article',
       'title' => $this->randomString(),
@@ -142,6 +153,31 @@ class JsonapiResourceTest extends BrowserTestBase {
     $this->assertCount(2, $response_document['data']);
     $this->assertArrayHasKey('included', $response_document);
     $this->assertNotEmpty($response_document['included']);
+  }
+
+  /**
+   * Tests the Current User Info resource.
+   */
+  public function testCurrentUserInfoResource() {
+    $role_id = $this->drupalCreateRole([]);
+    $this->account->addRole($role_id);
+    $this->account->setEmail('test@example.com');
+    $this->account->save();
+
+    $url = Url::fromRoute('jsonapi_resources_test.current_user');
+    $request_options = [];
+    $request_options[RequestOptions::HEADERS]['Accept'] = 'application/vnd.api+json';
+    $request_options = NestedArray::mergeDeep($request_options, $this->getAuthenticationRequestOptions());
+    $response = $this->request('GET', $url, $request_options);
+
+    $this->assertSame(200, $response->getStatusCode(), var_export(Json::decode((string) $response->getBody()), TRUE));
+    $response_document = Json::decode((string) $response->getBody());
+
+    $this->assertEquals($this->account->uuid(), $response_document['data'][0]['id']);
+    $attributes = $response_document['data'][0]['attributes'];
+    $this->assertEquals($this->account->getDisplayName(), $attributes['displayName']);
+    $this->assertEquals([$role_id], $attributes['roles']);
+    $this->assertNotEmpty($attributes['token']);
   }
 
   /**

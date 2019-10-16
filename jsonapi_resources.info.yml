@@ -1,6 +1,7 @@
 name: 'JSON:API Resources'
 description: "This module let's you define custom resources at routes of your choice that use existing resource types. This is useful for defining routes that return resource objects based on context like the currently authenticated user instead of a route parameter (e.g. a UUID)"
 core: 8.x
+core_version_requirement: ^8 || ^9
 type: module
 dependencies:
   - drupal:jsonapi

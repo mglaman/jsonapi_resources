@@ -2,9 +2,6 @@ jsonapi_resources_test.author_content:
   path: '/{user}/content'
   defaults:
     _jsonapi_resource: Drupal\jsonapi_resources_test\Resource\AuthorContent::process
-    # handle POST/PATCH
-#    _jsonapi_resource_types:
-#      - dlkdlkd
   requirements:
     _permission: 'access content'
     _entity_access: 'user.view'
@@ -17,9 +14,13 @@ jsonapi_resources_test.featured_content:
   path: '/featured-content'
   defaults:
     _jsonapi_resource: Drupal\jsonapi_resources_test\Resource\FeaturedNodes::process
-    # handle POST/PATCH
-  #    _jsonapi_resource_types:
-  #      - dlkdlkd
   requirements:
     _permission: 'access content'
+  methods: [GET]
+jsonapi_resources_test.current_user:
+  path: '/me'
+  defaults:
+    _jsonapi_resource: Drupal\jsonapi_resources_test\Resource\CurrentUserInfo::process
+  requirements:
+    _user_is_logged_in: 'TRUE'
   methods: [GET]

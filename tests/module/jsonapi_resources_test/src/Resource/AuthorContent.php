@@ -12,6 +12,20 @@ use Symfony\Component\HttpFoundation\Request;
 
 class AuthorContent extends EntityResourceBase {
 
+  /**
+   * Process the resource request.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The request.
+   * @param \Drupal\user\UserInterface $user
+   *   The user.
+   *
+   * @return \Drupal\jsonapi\ResourceResponse
+   *   The response.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   */
   public function process(Request $request, UserInterface $user): ResourceResponse {
     // Force the author to be included.
     $include = $request->query->get('include');

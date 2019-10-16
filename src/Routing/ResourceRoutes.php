@@ -46,6 +46,12 @@ final class ResourceRoutes implements EventSubscriberInterface {
     return $events;
   }
 
+  /**
+   * Decorates JSON:API Resource routes.
+   *
+   * @param \Drupal\Core\Routing\RouteBuildEvent $event
+   *   The route rebuild event.
+   */
   public function decorateJsonapiResourceRoutes(RouteBuildEvent $event) {
     foreach ($event->getRouteCollection() as $route) {
       if ($route->getDefault('_jsonapi_resource') === NULL) {

@@ -11,6 +11,18 @@ use Symfony\Component\HttpFoundation\Request;
 
 class FeaturedNodes extends EntityResourceBase {
 
+  /**
+   * Process the resource request.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The request.
+   *
+   * @return \Drupal\jsonapi\ResourceResponse
+   *   The response.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   */
   public function process(Request $request): ResourceResponse {
     $node_storage = $this->entityTypeManager->getStorage('node');
     $featured_query = $node_storage->getQuery();
